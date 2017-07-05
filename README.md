@@ -2,6 +2,7 @@
 
 This is just an example application for you to learn how to use concourse.
 
+
 # How to install?
 
 This application provides some make functions to help you build this binary
@@ -24,5 +25,7 @@ make deps
 ```sh
 make test
 ```
+
+To trigger Concourse CI pipeline
 
 Enjoy!
