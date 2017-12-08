@@ -16,33 +16,71 @@ jobs:
     plan:
     - get: super-app
       trigger: true
-
+      # Make a context "unit tests" status pending in Github Pull request
     - put: super-app
-      params: {path: super-app, context: Unit Tests, status: pending}
+      params: {path: super-app, context: Unit tests, status: pending}
 
-    - aggregate:
-      - task: run unit
-        file: super-app/class/tasks/unit.yml
-
-      - task: linting
-        file: super-app/class/tasks/lint.yml
-
-  - name: Buiding & integration testing
-    plan:
-    - get: super-app
-      passed: ["PR unit testing"]
-      trigger: true
-
-    - task: buid
-      file: super-app/class/tasks/build.yml
-
-    - task: integration test
-      file: super-app/class/tasks/integration.yml
-
+    - task: run unit
+      file: super-app/tutorial/scenario.3/2-on/tasks/unit.yml
+      on_success:
+    # Define success/failure on a job level
     on_success:
         put: super-app
-        params: {path: super-app, context: Unit Tests, status: success}
+        params: {path: super-app, context: Unit tests, status: success}
     on_failure:
-      put: super-app
-      params: {path: super-app, context: Unit Tests, status: failure}
+        put: super-app
+        params: {path: super-app, context: Unit tests, status: failure}
 
+  - name: PR lint testing
+    plan:
+    - get: super-app
+      trigger: true
+
+      # Make a context "lint tests" status pending in Github Pull request
+    - put: super-app
+      params: {path: super-app, context: lint tests, status: pending}
+
+    - task: run lint
+      file: super-app/tutorial/scenario.3/2-on/tasks/lint.yml
+    # Define success/failure on a job level
+    on_success:
+        put: super-app
+        params: {path: super-app, context: lint tests, status: success}
+    on_failure:
+        put: super-app
+        params: {path: super-app, context: lint tests, status: failure}
+
+  - name: PR building & integeration testing
+    plan:
+    - get: super-app
+      passed: ["PR unit testing", "PR lint testing"]
+      trigger: true
+
+      # Make a context "build & integeration tests" status pending in Github Pull request
+    - put: super-app
+      params: {path: super-app, context: build & integeration tests, status: pending}
+
+    - task: run lint
+      file: super-app/tutorial/scenario.3/2-on/tasks/lint.yml
+
+    - task: build
+      file: super-app/tutorial/scenario.3/2-on/tasks/build.yml
+      on_failure:
+        do:
+         - put: super-app
+           params: {path: super-app, context: build & integeration tests, status: failure}
+         - put: super-app
+           params: {path: super-app, context: build, status: failure}
+
+    - task: integeration test
+      file: super-app/tutorial/scenario.3/2-on/tasks/integeration.yml
+      on_failure:
+        do:
+         - put: super-app
+           params: {path: super-app, context: build & integeration tests, status: failure}
+         - put: super-app
+           params: {path: super-app, context: integeration tests, status: failure}
+
+      # Make a context "build & integeration tests" status sucess in Github Pull request
+    - put: super-app
+      params: {path: super-app, context: build & integeration tests, status: success}
