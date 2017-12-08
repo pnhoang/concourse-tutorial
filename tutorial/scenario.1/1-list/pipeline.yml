@@ -2,16 +2,16 @@
 resources:
   - name: super-app
     type: git
-    branch: ci
     source:
+      branch: ci
       uri: https://github.com/hellofresh/concourse-tutorial.git
 
 jobs:
-  - name: Test
+  - name: List
     plan:
     - get: super-app
       trigger: true
-    - task: Testing
+    - task: List
       config:
         platform: linux
         image_resource:
