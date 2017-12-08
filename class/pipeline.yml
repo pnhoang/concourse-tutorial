@@ -20,15 +20,29 @@ jobs:
     - put: super-app
       params: {path: super-app, context: Unit Tests, status: pending}
 
-    - task: run unit
-      file: super-app/class/tasks/unit.yml
-      on_success:
+    - aggregate:
+      - task: run unit
+        file: super-app/class/tasks/unit.yml
+
+      - task: linting
+        file: super-app/class/tasks/lint.yml
+
+  - name: Buiding & integration testing
+    plan:
+    - get: super-app
+      passed: ["PR unit testing"]
+      trigger: true
+
+    - task: buid
+      file: super-app/class/tasks/build.yml
+
+    - task: integration test
+      file: super-app/class/tasks/integration.yml
+
+    on_success:
         put: super-app
         params: {path: super-app, context: Unit Tests, status: success}
-      on_failure:
-        put: super-app
-        params: {path: super-app, context: Unit Tests, status: failure}
-
-
-
+    on_failure:
+      put: super-app
+      params: {path: super-app, context: Unit Tests, status: failure}
 
